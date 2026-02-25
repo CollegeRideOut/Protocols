@@ -12,17 +12,53 @@ type request = {
   parse: ((data: Buffer<ArrayBuffer>) => Result<number, Error>)
 }
 
-
-
 type requestLine = {
   httpVersion: string;
   requestTarget: string;
   method: string;
+}
 
+type headers = {
+  value: Map<string, string>
+  parse: ((data: Buffer<ArrayBuffer>) => Result<{ n: number, done: boolean }, Error>)
 }
 
 
-function initilizeRequest(): request {
+export function newHeader(): headers {
+  return {
+    value: new Map(),
+    parse: function (data: Buffer<ArrayBuffer>) {
+
+      if (!data.includes(RegisterdNurse)) {
+        return { ok: true, value: { n: 0, done: false } };
+      }
+      const registerNurseIndex = data.indexOf(RegisterdNurse)
+      if (registerNurseIndex === 0) {
+        return { ok: true, value: { n: 2, done: true } }
+      }
+
+      const bytesConsumed = data.subarray(0, registerNurseIndex)
+      const ninput = bytesConsumed.toString('ascii');
+      let colonIndex = ninput.indexOf(":");
+      if (colonIndex < 0) {
+
+      }
+
+      let fieldName = ninput.substring(0, colonIndex);
+
+      if (!/^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/.test(fieldName)) {
+        return { ok: false, error: new Error("Invalid header field-name") };
+      }
+      let fieldVaue = ninput.substring(colonIndex + 1).trim();
+
+      this.value.set(fieldName, fieldVaue)
+      return { ok: true, value: { n: bytesConsumed.length + RegisterdNurse.length, done: false } }
+    }
+  }
+}
+
+
+function newRequest(): request {
   return {
     requestLine: { httpVersion: '', requestTarget: '', method: '' },
     state: 'initilized',
@@ -112,7 +148,7 @@ export async function requestFromReader(
   reader: AsyncIterable<Buffer>
 ): Promise<Result<request, Error>> {
 
-  const request = initilizeRequest();
+  const request = newRequest();
   let buffer = Buffer.alloc(8);
   let bytesInBuffer = 0;
   const iterator = reader[Symbol.asyncIterator]()

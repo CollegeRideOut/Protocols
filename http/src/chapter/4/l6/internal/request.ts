@@ -1,4 +1,4 @@
-import { isAllUpperCase, Result } from "../../utils";
+import { isAllUpperCase, Result } from "../../../../utils";
 
 const RegisterdNurse = '\r\n'
 const States = { initialized: 'initilized', done: 'done' } as const;

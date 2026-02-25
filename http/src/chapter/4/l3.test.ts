@@ -1,7 +1,7 @@
 
 import assert from "node:assert"
 import test from "node:test"
-import { requestFromReader } from "./l2"
+import { requestFromReader } from "./l3"
 import { stringToAsyncIterable } from "../../utils"
 
 test('Chapter 4 - L3 - Request', async (t) => {
@@ -60,10 +60,6 @@ test('Chapter 4 - L3 - Request', async (t) => {
     assert.strictEqual(result.ok, false);
     assert.strictEqual(result.error.message, 'invalid version')
   })
-
-
-
-
 })
 
 

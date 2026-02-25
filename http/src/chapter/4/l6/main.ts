@@ -1,10 +1,11 @@
 import net from 'node:net'
+import { requestFromReader } from './internal/request';
+//import { __dirname, safeAsync, safe } from '../../../utils'
 
 async function* getLinesGenerator(socket: net.Socket): AsyncGenerator<string> {
   const CHUNK_SIZE = 8;
   socket.setEncoding('utf8');
   let buffer = '';
-
 
   for await (const chunk of socket) {
     buffer += chunk;
@@ -22,36 +23,26 @@ async function* getLinesGenerator(socket: net.Socket): AsyncGenerator<string> {
 async function accept(socket: net.Socket) {
   //console.log("Connection accepted");
   try {
-    let lines = ""
-    for await (const line of getLinesGenerator(socket)) {
-      lines += process.stdout.write(line);
-    }
+    const result = await requestFromReader(socket)
+    if (!result.ok) { return; }
 
-    socket.write(lines)
+    const request = result.value
+    console.log(request)
+
   } catch (err) {
     //console.log("Connection error:", err);
   } finally {
     //console.log("Connection closed");
-    socket.end()
   }
 
 }
 
-export function createSever() {
-  const server = net.createServer(accept)
-  return server;
-}
-
+//tcp listener
 async function run() {
-  const server = createSever()
-  await new Promise<void>((resolve) => {
-    server.listen(42069, () => {
-      console.log("Listening on port 42069");
-      resolve()
-    })
+  const server = net.createServer(accept)
+  server.listen(42069, () => {
+    console.log("Listening on port 42069");
   });
-
-  console.log("whats up");
 
   process.on("SIGINT", () => {
     //console.log("\nShutting down server...");
@@ -59,8 +50,6 @@ async function run() {
       process.exit(0);
     });
   });
-  return server;
-
 }
 
-//run()
+run();
